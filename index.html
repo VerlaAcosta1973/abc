@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="pt">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Jogo de Arrastar a Letra</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+        color: #fff;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+      }
+      .container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 90%;
+        max-width: 500px;
+      }
+      .letras {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 15px;
+        padding: 15px;
+        border: 2px dashed #fff;
+        min-height: 50px;
+        margin-top: 20px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+        width: 100%;
+      }
+      .letra {
+        padding: 15px;
+        background-color: #ffcc5c;
+        cursor: grab;
+        font-size: 24px;
+        border-radius: 10px;
+        transition: transform 0.2s;
+        width: 60px;
+        text-align: center;
+      }
+      .dropzone {
+        margin-top: 20px;
+        padding: 20px;
+        border: 2px dashed #fff;
+        min-width: 80px;
+        min-height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 10px;
+        font-size: 18px;
+        width: 100%;
+      }
+      .mensagem-container {
+        margin-top: 20px;
+        font-size: 20px;
+        font-weight: bold;
+      }
+      .pontuacao-container {
+        margin-top: 10px;
+        font-size: 18px;
+      }
+      .botao-reiniciar {
+        margin-top: 20px;
+        padding: 10px 20px;
+        font-size: 18px;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Arraste a letra correta</h1>
+    <div class="container">
+      <h2>Letra: <span id="letra-exibida">A</span></h2>
+      <div class="letras" id="letras-container"></div>
+      <div class="dropzone" id="dropzone">Arraste a letra aqui</div>
+      <div class="pontuacao-container">
+        Pontuação: <span id="pontuacao">0</span>
+      </div>
+      <div class="mensagem-container" id="mensagem"></div>
+      <button class="botao-reiniciar" id="reiniciar">Reiniciar Jogo</button>
+    </div>
+    <audio
+      id="clapSound"
+      src="https://www.fesliyanstudios.com/play-mp3/4384"
+    ></audio>
+    <script>
+      const vogais = ["A", "E", "I", "O", "U"];
+      let rodada;
+      let acertos;
+      const totalRodadas = 10;
+      const mensagem = document.getElementById("mensagem");
+      const pontuacaoElement = document.getElementById("pontuacao");
+      const dropzone = document.getElementById("dropzone");
+      const letrasContainer = document.getElementById("letras-container");
+      const clapSound = document.getElementById("clapSound");
+      const botaoReiniciar = document.getElementById("reiniciar");
+
+      function embaralhar(array) {
+        return array.sort(() => Math.random() - 0.5);
+      }
+
+      function novaRodada() {
+        if (rodada > totalRodadas) {
+          finalizarJogo();
+          return;
+        }
+        document.getElementById("letra-exibida").textContent =
+          vogais[Math.floor(Math.random() * vogais.length)];
+        criarLetras();
+      }
+
+      function criarLetras() {
+        letrasContainer.innerHTML = "";
+        const letrasEmbaralhadas = embaralhar([...vogais]);
+        letrasEmbaralhadas.forEach((letra) => {
+          const div = document.createElement("div");
+          div.classList.add("letra");
+          div.textContent = letra;
+          div.draggable = true;
+          div.id = letra;
+          div.addEventListener("dragstart", (event) => {
+            event.dataTransfer.setData("text", event.target.id);
+          });
+          letrasContainer.appendChild(div);
+        });
+      }
+
+      dropzone.addEventListener("dragover", (event) => {
+        event.preventDefault();
+      });
+
+      dropzone.addEventListener("drop", (event) => {
+        event.preventDefault();
+        const letraId = event.dataTransfer.getData("text");
+        verificarEscolha(letraId);
+      });
+
+      function verificarEscolha(letraId) {
+        const letraCorreta =
+          document.getElementById("letra-exibida").textContent;
+        if (letraId === letraCorreta) {
+          mensagem.textContent = "Parabéns! Você acertou!";
+          mensagem.style.color = "#4CAF50";
+          acertos++;
+          clapSound.play();
+        } else {
+          mensagem.textContent = "Errou! Tente novamente.";
+          mensagem.style.color = "#FF6347";
+        }
+        pontuacaoElement.textContent = acertos;
+        rodada++;
+        setTimeout(novaRodada, 1500);
+      }
+
+      function finalizarJogo() {
+        const resultado =
+          acertos >= totalRodadas / 2
+            ? "Parabéns! Você passou de fase!"
+            : "Infelizmente, você não passou de fase.";
+        mensagem.textContent = resultado;
+        mensagem.style.color =
+          acertos >= totalRodadas / 2 ? "#4CAF50" : "#FF6347";
+      }
+
+      function reiniciarJogo() {
+        rodada = 1;
+        acertos = 0;
+        mensagem.textContent = "";
+        pontuacaoElement.textContent = acertos;
+        novaRodada();
+      }
+
+      botaoReiniciar.addEventListener("click", reiniciarJogo);
+
+      reiniciarJogo();
+    </script>
+  </body>
+</html>
